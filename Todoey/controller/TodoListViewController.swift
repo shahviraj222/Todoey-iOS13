@@ -19,17 +19,14 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         print(dataFilePath)
-
+        loadItem()
         
-//        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
-//                    itemArray = items
-//                }
-//        loadItem()
     }
+    
+//    MARK: - Saving and loading methodes of Coredata.
     
     func saveData(){
         //saving the data in deafaults.
-
         do{
             try context.save()
         }catch{
@@ -37,55 +34,18 @@ class TodoListViewController: UITableViewController {
         }
         self.tableView.reloadData()
     }
-    
-//    func loadItem(){
-//        if let data = try? Data(contentsOf: dataFilePath!){
-//            let decoder = PropertyListDecoder()
-//            do{
-//                itemArray = try decoder.decode([Item].self, from: data)
-//            }catch{
-//                print("Erooring While Decoding\(error)")
-//            }
-//            
-//        }
-//    }
-    
-    //Mark Table View DataSource Methode
-    
-    //        no of rows we have in our table view
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+
+    func loadItem(){
+        let request:NSFetchRequest<Item> = Item.fetchRequest()
+        do{
+            itemArray = try context.fetch(request)
+        }catch{
+            print("Error in loading data: \(error)")
+        }
+        tableView.reloadData()
     }
     
-    
-    //      for setting each row in the table view.
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell",for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row].title
-        
-        itemArray[indexPath.row].ismark == true ? (cell.accessoryType = .checkmark) : (cell.accessoryType = .none)
-        
-//      cell.accessoryType = itemArray[indexPath.row].ismark ? .checkmark : .none
-        
-        return cell
-    }
-    
-    //Mark Table View Delegate Method
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //        print(itemArray[indexPath.row])
-        
-        //for selcting a particular row  tableView.cellForRow()
-        
-        itemArray[indexPath.row].ismark = !itemArray[indexPath.row].ismark   //changing the ismark
-    
-        self.saveData()
-        
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-    
-    // Mark Add item in todey list.
-    
+    //    MARK: - Adding new Item in todey.
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var texFiled = UITextField()
         
@@ -122,5 +82,77 @@ class TodoListViewController: UITableViewController {
         
     }
     
+    
+//MARK: - Table View DataSource Methode
+    
+    //        no of rows we have in our table view
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return itemArray.count
+    }
+    
+    
+    //      for setting each row in the table view.
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell",for: indexPath)
+        cell.textLabel?.text = itemArray[indexPath.row].title
+        
+        itemArray[indexPath.row].ismark == true ? (cell.accessoryType = .checkmark) : (cell.accessoryType = .none)
+        
+//      cell.accessoryType = itemArray[indexPath.row].ismark ? .checkmark : .none
+        
+        return cell
+    }
+    
+    
+    //MARK: - Table View Delegate Method
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        //        print(itemArray[indexPath.row])
+        
+        //for selcting a particular row  tableView.cellForRow()
+        
+        itemArray[indexPath.row].ismark = !itemArray[indexPath.row].ismark   //changing the ismark
+    
+        self.saveData()
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    
 }
 
+//MARK: - UISearchBar Delegate Methodes.s
+extension TodoListViewController : UISearchBarDelegate{
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        let request :NSFetchRequest<Item> = Item.fetchRequest()
+        
+//        predicate means querying in the coredata.
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        request.predicate = predicate
+        
+//        sorting the data on the b
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        do{
+            itemArray = try context.fetch(request)
+        }catch{
+            print("Error in Filtering data: \(error)")
+        }
+        
+        tableView.reloadData()
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        means if search bar contain zero element
+        if searchBar.text?.count == 0{
+            loadItem()
+//            the keyboard and coursel is dismissed.
+            DispatchQueue.main.async{
+                searchBar.resignFirstResponder()
+            }
+            
+        }
+    }
+}

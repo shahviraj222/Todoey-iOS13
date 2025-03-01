@@ -55,12 +55,12 @@
 			path = controller;
 			sourceTree = "<group>";
 		};
-		227E3C532D717E5C00A483CC /* view */ = {
+		227E3C532D717E5C00A483CC /* views */ = {
 			isa = PBXGroup;
 			children = (
 				EB2BE4FF239524DB00FB933B /* Main.storyboard */,
 			);
-			path = view;
+			path = views;
 			sourceTree = "<group>";
 		};
 		EB2BE4ED239524DB00FB933B = {
@@ -85,7 +85,7 @@
 				227D98C32D7174A900B24FF8 /* temp.swift */,
 				EB2BE4F9239524DB00FB933B /* AppDelegate.swift */,
 				227E3C522D717E3800A483CC /* controller */,
-				227E3C532D717E5C00A483CC /* view */,
+				227E3C532D717E5C00A483CC /* views */,
 				22507B332D70293800A6BC30 /* model */,
 				EB2BE502239524DC00FB933B /* Assets.xcassets */,
 				EB2BE504239524DC00FB933B /* LaunchScreen.storyboard */,
