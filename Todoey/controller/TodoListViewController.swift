@@ -7,14 +7,15 @@
 //
 
 import UIKit
-
+import CoreData
 //because we implemented the UITableViewController direclty we don't need to add the self.datadelegate and self.datasource.
 
 class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
-    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         print(dataFilePath)
@@ -23,32 +24,31 @@ class TodoListViewController: UITableViewController {
 //        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
 //                    itemArray = items
 //                }
-        loadItem()
+//        loadItem()
     }
     
     func saveData(){
         //saving the data in deafaults.
-        let encoder = PropertyListEncoder()
+
         do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to: self.dataFilePath!)
+            try context.save()
         }catch{
-            print("Error Encoding ArryItems")
+            print("Error while saving context \(error)")
         }
         self.tableView.reloadData()
     }
     
-    func loadItem(){
-        if let data = try? Data(contentsOf: dataFilePath!){
-            let decoder = PropertyListDecoder()
-            do{
-                itemArray = try decoder.decode([Item].self, from: data)
-            }catch{
-                print("Erooring While Decoding\(error)")
-            }
-            
-        }
-    }
+//    func loadItem(){
+//        if let data = try? Data(contentsOf: dataFilePath!){
+//            let decoder = PropertyListDecoder()
+//            do{
+//                itemArray = try decoder.decode([Item].self, from: data)
+//            }catch{
+//                print("Erooring While Decoding\(error)")
+//            }
+//            
+//        }
+//    }
     
     //Mark Table View DataSource Methode
     
@@ -97,7 +97,7 @@ class TodoListViewController: UITableViewController {
             print(texFiled.text!)
             
             if let a = texFiled.text{
-                let newItem = Item()
+                let newItem = Item(context: self.context)
                 newItem.title = a
                 self.itemArray.append(newItem)
             }
