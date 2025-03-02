@@ -131,7 +131,7 @@ extension TodoListViewController : UISearchBarDelegate{
         let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         request.predicate = predicate
         
-//        sorting the data on the b
+//        sorting the data on the basis of title
         let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
         request.sortDescriptors = [sortDescriptor]
         
