@@ -13,14 +13,19 @@ import CoreData
 class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
+    var selectedCategory:Category?{
+        didSet{
+            loadItem()
+        }
+    }
+    
+    
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print(dataFilePath)
-        loadItem()
-        
     }
     
 //    MARK: - Saving and loading methodes of Coredata.
@@ -59,6 +64,7 @@ class TodoListViewController: UITableViewController {
             if let a = texFiled.text{
                 let newItem = Item(context: self.context)
                 newItem.title = a
+                newItem.parentCategory = self.selectedCategory
                 self.itemArray.append(newItem)
             }
             
