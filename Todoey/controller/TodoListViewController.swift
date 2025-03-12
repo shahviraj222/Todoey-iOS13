@@ -7,158 +7,115 @@
 //
 
 import UIKit
-import CoreData
-//because we implemented the UITableViewController direclty we don't need to add the self.datadelegate and self.datasource.
+import RealmSwift
 
 class TodoListViewController: UITableViewController {
     
-    var itemArray = [Item]()
-    var selectedCategory:Category?{
-        didSet{
-            loadItem()
+    var todoItems: Results<Item>?
+    let realm = try! Realm()
+    
+    var selectedCategory: Category? {
+        didSet {
+            loadItems()
         }
     }
-    
-    
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(dataFilePath)
     }
     
-//    MARK: - Saving and loading methodes of Coredata.
+    // MARK: - Data Manipulation Methods
     
-    func saveData(){
-        //saving the data in deafaults.
-        do{
-            try context.save()
-        }catch{
-            print("Error while saving context \(error)")
-        }
-        self.tableView.reloadData()
-    }
-
-    func loadItem(){
-        let request:NSFetchRequest<Item> = Item.fetchRequest()
-        do{
-            itemArray = try context.fetch(request)
-        }catch{
-            print("Error in loading data: \(error)")
-        }
+    func loadItems() {
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
     
-    //    MARK: - Adding new Item in todey.
+    // MARK: - Adding New Item
+    
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        var texFiled = UITextField()
-        
-        let alert = UIAlertController(title: "Add new item in todey", message: "", preferredStyle: .alert)
-        
-        let action = UIAlertAction(title: "Add Item", style: .default){(action) in
-            
-            //what will happen when user click on addITem button
-            print(texFiled.text!)
-            
-            if let a = texFiled.text{
-                let newItem = Item(context: self.context)
-                newItem.title = a
-                newItem.parentCategory = self.selectedCategory
-                self.itemArray.append(newItem)
-            }
-            
-            self.saveData()
+        var textField = UITextField()
 
-           
-            
-//            reloadData() call the datasource method again.
-            self.tableView.reloadData()
+        let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
+
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            guard let itemText = textField.text, !itemText.trimmingCharacters(in: .whitespaces).isEmpty else {
+                return // Don't add empty items
+            }
+
+            if let currentCategory = self.selectedCategory {
+                do {
+                    try self.realm.write {
+                        let newItem = Item()
+                        newItem.title = itemText
+                        currentCategory.items.append(newItem)
+                    }
+                } catch {
+                    print("Error saving Item: \(error)")
+                }
+                self.tableView.reloadData()
+            }
         }
-        
+
         alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Add new item"
-            texFiled = alertTextField
-            print(alertTextField.text!) //nothing printed here
-            
+            alertTextField.placeholder = "Enter new item"
+            textField = alertTextField
         }
-        
+
         alert.addAction(action)
         present(alert, animated: true)
-        
     }
     
+    // MARK: - Table View DataSource Methods
     
-//MARK: - Table View DataSource Methode
-    
-    //        no of rows we have in our table view
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+        return todoItems?.count ?? 1
     }
-    
-    
-    //      for setting each row in the table view.
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell",for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row].title
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        itemArray[indexPath.row].ismark == true ? (cell.accessoryType = .checkmark) : (cell.accessoryType = .none)
-        
-//      cell.accessoryType = itemArray[indexPath.row].ismark ? .checkmark : .none
-        
+        if let item = todoItems?[indexPath.row] {
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.ismark ? .checkmark : .none
+        } else {
+            cell.textLabel?.text = "No items added"
+        }
+
         return cell
     }
     
-    
-    //MARK: - Table View Delegate Method
+    // MARK: - Table View Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //        print(itemArray[indexPath.row])
-        
-        //for selcting a particular row  tableView.cellForRow()
-        
-        itemArray[indexPath.row].ismark = !itemArray[indexPath.row].ismark   //changing the ismark
-    
-        self.saveData()
-        
+        if let item = todoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    item.ismark.toggle()
+                }
+            } catch {
+                print("Error updating item: \(error)")
+            }
+        }
+        tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
     }
-    
-    
 }
 
-//MARK: - UISearchBar Delegate Methodes.s
-extension TodoListViewController : UISearchBarDelegate{
+// MARK: - UISearchBar Delegate Methods
+
+extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        
-        let request :NSFetchRequest<Item> = Item.fetchRequest()
-        
-//        predicate means querying in the coredata.
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        request.predicate = predicate
-        
-//        sorting the data on the basis of title
-        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-        request.sortDescriptors = [sortDescriptor]
-        
-        do{
-            itemArray = try context.fetch(request)
-        }catch{
-            print("Error in Filtering data: \(error)")
-        }
-        
+        todoItems = selectedCategory?.items.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
-    
+
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        means if search bar contain zero element
-        if searchBar.text?.count == 0{
-            loadItem()
-//            the keyboard and coursel is dismissed.
-            DispatchQueue.main.async{
+        if searchBar.text?.isEmpty ?? true {
+            loadItems()
+            DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
             }
-            
         }
     }
 }
