@@ -106,12 +106,12 @@ class TodoListViewController: UITableViewController {
 
 extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        todoItems = selectedCategory?.items.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
-        tableView.reloadData()
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title",ascending: true)
+        
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchBar.text?.isEmpty ?? true {
+        if searchBar.text?.count == 0 {
             loadItems()
             DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
