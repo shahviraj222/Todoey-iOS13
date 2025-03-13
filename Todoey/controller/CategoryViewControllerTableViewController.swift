@@ -142,6 +142,6 @@ extension CategoryViewControllerTableViewController : SwipeTableViewCellDelegate
         options.expansionStyle = .destructive
         return options
     }
-    
+        
 }
 
