@@ -12,7 +12,7 @@ Learn how to persist data in iOS apps and understand the differences between sto
   - Core Data – structured object storage.
   - Realm – local database for fast performance.
 
-<img width="120" height="262" alt="Simulator Screenshot - iPhone 17 Pro - 2025-09-20 at 18 14 40" src="https://github.com/user-attachments/assets/2444c661-46c7-4a44-b786-f8b3f91b3d46" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2025-09-20 at 18 14 40" src="https://github.com/user-attachments/assets/2444c661-46c7-4a44-b786-f8b3f91b3d46" />
 
 <img width="120" height="262" alt="Simulator Screenshot - iPhone 17 Pro - 2025-09-20 at 18 14 34" src="https://github.com/user-attachments/assets/2bdfd701-ceab-4dda-bd77-a82e6c37722a" />
 
